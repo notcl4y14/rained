@@ -185,6 +185,14 @@ static class I18n {
 
         string localeCodename = luaState.ToString(-1);
         luaState.Pop(1);
+        
+        type = luaState.GetGlobal("Data");
+
+        if (type != LuaType.Function)
+        {
+            Log.Error($"I18n LUA: Expected global function Data()");
+            return false;
+        }
 
         luaState.SetTop(0);
 
@@ -265,6 +273,23 @@ static class I18n {
 
         // local t = pcall(f)
         LuaStatus status = luaState.PCall(0, 1, 0);
+
+        if (status != LuaStatus.OK)
+        {
+            string error = luaState.ToString(0);
+            Log.Error($"I18n LUA: {error}");
+            return false;
+        }
+
+        type = luaState.GetGlobal("Data");
+
+        if (type != LuaType.Function)
+        {
+            Log.Error($"I18n LUA: Expected global function Data()");
+            return false;
+        }
+
+        status = luaState.PCall(0, 1, 0);
 
         if (status != LuaStatus.OK)
         {
