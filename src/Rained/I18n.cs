@@ -76,6 +76,11 @@ static class I18n {
                 continue;
             }
 
+            if (Path.GetExtension(dirItem) != ".lua") {
+                // The item is not a LUA file, so we skip it
+                continue;
+            }
+
             LocaleData? nullableLocaleData = RetrieveLocaleDataFromFile(dirItem);
 
             if (nullableLocaleData == null)
