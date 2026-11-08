@@ -179,35 +179,35 @@ static class EditorWindow
         {
             var fileActive = RainEd.Instance.CurrentTab is not null;
 
-            if (ImGui.BeginMenu("File"))
+            if (ImGui.BeginMenu(I18n.GetString("ui.menu_bar.file")))
             {
-                KeyShortcuts.ImGuiMenuItem(KeyShortcut.New, "New...");
-                KeyShortcuts.ImGuiMenuItem(KeyShortcut.Open, "Open...");
+                KeyShortcuts.ImGuiMenuItem(KeyShortcut.New, I18n.GetString("ui.menu_bar.file.new"));
+                KeyShortcuts.ImGuiMenuItem(KeyShortcut.Open, I18n.GetString("ui.menu_bar.file.open"));
 
-                if (ImGui.BeginMenu("Open Recent"))
+                if (ImGui.BeginMenu(I18n.GetString("ui.menu_bar.file.open_recent")))
                 {
                     RecentLevelsList(10);
                     ImGui.EndMenu();
                 }
 
-                KeyShortcuts.ImGuiMenuItem(KeyShortcut.Save, "Save", enabled: fileActive);
-                KeyShortcuts.ImGuiMenuItem(KeyShortcut.SaveAs, "Save As...", enabled: fileActive);
+                KeyShortcuts.ImGuiMenuItem(KeyShortcut.Save, I18n.GetString("ui.menu_bar.file.save"), enabled: fileActive);
+                KeyShortcuts.ImGuiMenuItem(KeyShortcut.SaveAs, I18n.GetString("ui.menu_bar.file.save_as"), enabled: fileActive);
 
-                KeyShortcuts.ImGuiMenuItem(KeyShortcut.CloseFile, "Close", enabled: fileActive);
-                KeyShortcuts.ImGuiMenuItem(KeyShortcut.CloseAllFiles, "Close All");
+                KeyShortcuts.ImGuiMenuItem(KeyShortcut.CloseFile, I18n.GetString("ui.menu_bar.file.close"), enabled: fileActive);
+                KeyShortcuts.ImGuiMenuItem(KeyShortcut.CloseAllFiles, I18n.GetString("ui.menu_bar.file.close_all"));
 
                 ImGui.Separator();
 
-                KeyShortcuts.ImGuiMenuItem(KeyShortcut.Render, "Render...", enabled: fileActive);
-                KeyShortcuts.ImGuiMenuItem(KeyShortcut.ExportGeometry, "Export Geometry...", enabled: fileActive);
-                if (ImGui.MenuItem("Mass Render..."))
+                KeyShortcuts.ImGuiMenuItem(KeyShortcut.Render, I18n.GetString("ui.menu_bar.file.render"), enabled: fileActive);
+                KeyShortcuts.ImGuiMenuItem(KeyShortcut.ExportGeometry, I18n.GetString("ui.menu_bar.file.export_geometry"), enabled: fileActive);
+                if (ImGui.MenuItem(I18n.GetString("ui.menu_bar.file.mass_render")))
                 {
                     MassRenderWindow.OpenWindow();
                 }
 
                 ImGui.Separator();
 
-                if (ImGui.MenuItem("Preferences..."))
+                if (ImGui.MenuItem(I18n.GetString("ui.menu_bar.file.preferences")))
                 {
                     PreferencesWindow.OpenWindow();
                 }
@@ -215,7 +215,7 @@ static class EditorWindow
                 LuaScripting.Modules.GuiModule.MenuHook("File", true);
 
                 ImGui.Separator();
-                if (ImGui.MenuItem("Quit", "Alt+F4"))
+                if (ImGui.MenuItem(I18n.GetString("ui.menu_bar.file.quit"), "Alt+F4"))
                 {
                     PromptUnsavedChanges((bool ok) =>
                     {
@@ -226,17 +226,17 @@ static class EditorWindow
                 ImGui.EndMenu();
             }
 
-            if (ImGui.BeginMenu("Edit"))
+            if (ImGui.BeginMenu(I18n.GetString("ui.menu_bar.edit")))
             {
-                KeyShortcuts.ImGuiMenuItem(KeyShortcut.Undo, "Undo", enabled: fileActive);
-                KeyShortcuts.ImGuiMenuItem(KeyShortcut.Redo, "Redo", enabled: fileActive);
+                KeyShortcuts.ImGuiMenuItem(KeyShortcut.Undo, I18n.GetString("ui.menu_bar.edit.undo"), enabled: fileActive);
+                KeyShortcuts.ImGuiMenuItem(KeyShortcut.Redo, I18n.GetString("ui.menu_bar.edit.redo"), enabled: fileActive);
                 //ImGui.Separator();
                 //ImGuiMenuItemShortcut(ShortcutID.Cut, "Cut");
                 //ImGuiMenuItemShortcut(ShortcutID.Copy, "Copy");
                 //ImGuiMenuItemShortcut(ShortcutID.Paste, "Paste");
                 ImGui.Separator();
 
-                if (ImGui.MenuItem("Resize Level...", enabled: fileActive))
+                if (ImGui.MenuItem(I18n.GetString("ui.menu_bar.edit.resize_level"), enabled: fileActive))
                 {
                     levelResizeWin = new LevelResizeWindow();
                 }
@@ -246,7 +246,7 @@ static class EditorWindow
                 {
                     ImGui.Separator();
 
-                    if (ImGui.BeginMenu("Commands"))
+                    if (ImGui.BeginMenu(I18n.GetString("ui.menu_bar.edit.commands")))
                     {
                         foreach (RainEd.Command cmd in customCommands)
                         {
@@ -272,13 +272,13 @@ static class EditorWindow
                 ImGui.EndMenu();
             }
 
-            if (ImGui.BeginMenu("View"))
+            if (ImGui.BeginMenu(I18n.GetString("ui.menu_bar.view")))
             {
                 var prefs = RainEd.Instance.Preferences;
 
-                KeyShortcuts.ImGuiMenuItem(KeyShortcut.ViewZoomIn, "Zoom In", enabled: fileActive);
-                KeyShortcuts.ImGuiMenuItem(KeyShortcut.ViewZoomOut, "Zoom Out", enabled: fileActive);
-                if (ImGui.MenuItem("Reset View", enabled: fileActive))
+                KeyShortcuts.ImGuiMenuItem(KeyShortcut.ViewZoomIn, I18n.GetString("ui.menu_bar.view.zoom_in"), enabled: fileActive);
+                KeyShortcuts.ImGuiMenuItem(KeyShortcut.ViewZoomOut, I18n.GetString("ui.menu_bar.view.zoom_out"), enabled: fileActive);
+                if (ImGui.MenuItem(I18n.GetString("ui.menu_bar.view.reset_view"), enabled: fileActive))
                 {
                     RainEd.Instance.LevelView.ResetView();
                 }
@@ -291,26 +291,26 @@ static class EditorWindow
                     renderer = RainEd.Instance.LevelView.Renderer;
                 }
 
-                KeyShortcuts.ImGuiMenuItem(KeyShortcut.ToggleViewGrid, "Grid", prefs.ViewGrid);
-                KeyShortcuts.ImGuiMenuItem(KeyShortcut.ToggleViewTiles, "Tiles", prefs.ViewTiles);
-                KeyShortcuts.ImGuiMenuItem(KeyShortcut.ToggleViewProps, "Props", prefs.ViewProps);
-                KeyShortcuts.ImGuiMenuItem(KeyShortcut.ToggleViewCameras, "Camera Borders", prefs.ViewCameras);
-                KeyShortcuts.ImGuiMenuItem(KeyShortcut.ToggleViewGraphics, "Tile Graphics", prefs.ViewPreviews);
+                KeyShortcuts.ImGuiMenuItem(KeyShortcut.ToggleViewGrid, I18n.GetString("ui.menu_bar.view.grid"), prefs.ViewGrid);
+                KeyShortcuts.ImGuiMenuItem(KeyShortcut.ToggleViewTiles, I18n.GetString("ui.menu_bar.view.tiles"), prefs.ViewTiles);
+                KeyShortcuts.ImGuiMenuItem(KeyShortcut.ToggleViewProps, I18n.GetString("ui.menu_bar.view.props"), prefs.ViewProps);
+                KeyShortcuts.ImGuiMenuItem(KeyShortcut.ToggleViewCameras, I18n.GetString("ui.menu_bar.view.camera_borders"), prefs.ViewCameras);
+                KeyShortcuts.ImGuiMenuItem(KeyShortcut.ToggleViewGraphics, I18n.GetString("ui.menu_bar.view.tile_graphics"), prefs.ViewPreviews);
 
-                if (ImGui.BeginMenu("Node Indices"))
+                if (ImGui.BeginMenu(I18n.GetString("ui.menu_bar.view.node_indices")))
                 {
-                    KeyShortcuts.ImGuiMenuItem(KeyShortcut.ToggleViewNodeIndices, "Show", prefs.ViewNodeIndices);
+                    KeyShortcuts.ImGuiMenuItem(KeyShortcut.ToggleViewNodeIndices, I18n.GetString("ui.menu_bar.view.node_indices.show"), prefs.ViewNodeIndices);
                     ImGui.Separator();
 
                     Span<string> flagNames = [
-                        "Room Exits",
-                        "Creature Dens",
-                        "Scav Transports",
-                        "Side Exits",
-                        "Sky Exits",
-                        "Sea Exits",
-                        "Hives",
-                        "Garbage Holes",
+                        I18n.GetString("ui.menu_bar.view.node_indices.room_exits"),
+                        I18n.GetString("ui.menu_bar.view.node_indices.creature_dens"),
+                        I18n.GetString("ui.menu_bar.view.node_indices.scav_transports"),
+                        I18n.GetString("ui.menu_bar.view.node_indices.side_exits"),
+                        I18n.GetString("ui.menu_bar.view.node_indices.sky_exits"),
+                        I18n.GetString("ui.menu_bar.view.node_indices.sea_exits"),
+                        I18n.GetString("ui.menu_bar.view.node_indices.hives"),
+                        I18n.GetString("ui.menu_bar.view.node_indices.garbage_holes"),
                     ];
 
                     for (int i = 0; i < flagNames.Length; i++)
@@ -322,7 +322,7 @@ static class EditorWindow
                     ImGui.EndMenu();
                 }
 
-                if (ImGui.MenuItem("Obscured Beams", null, prefs.ViewObscuredBeams))
+                if (ImGui.MenuItem(I18n.GetString("ui.menu_bar.view.obscured_beams"), null, prefs.ViewObscuredBeams))
                 {
                     prefs.ViewObscuredBeams = !prefs.ViewObscuredBeams;
 
@@ -334,47 +334,47 @@ static class EditorWindow
                     }
                 }
 
-                if (ImGui.MenuItem("Tile Heads", null, prefs.ViewTileHeads))
+                if (ImGui.MenuItem(I18n.GetString("ui.menu_bar.view.tile_heads"), null, prefs.ViewTileHeads))
                 {
                     prefs.ViewTileHeads = !prefs.ViewTileHeads;
                 }
 
                 ImGui.Separator();
 
-                if (ImGui.MenuItem("Keyboard Shortcuts", null, ShortcutsWindow.IsWindowOpen))
+                if (ImGui.MenuItem(I18n.GetString("ui.menu_bar.view.keyboard_shortcuts"), null, ShortcutsWindow.IsWindowOpen))
                 {
                     ShortcutsWindow.IsWindowOpen = !ShortcutsWindow.IsWindowOpen;
                 }
 
-                if (ImGui.MenuItem("Logs", null, LogsWindow.IsWindowOpen))
+                if (ImGui.MenuItem(I18n.GetString("ui.menu_bar.view.logs"), null, LogsWindow.IsWindowOpen))
                 {
                     LogsWindow.IsWindowOpen = !LogsWindow.IsWindowOpen;
                 }
 
-                if (ImGui.MenuItem("Palettes", null, PaletteWindow.IsWindowOpen))
+                if (ImGui.MenuItem(I18n.GetString("ui.menu_bar.view.palettes"), null, PaletteWindow.IsWindowOpen))
                 {
                     PaletteWindow.IsWindowOpen = !PaletteWindow.IsWindowOpen;
                 }
 
-                if (ImGui.BeginMenu("Tile Preview"))
+                if (ImGui.BeginMenu(I18n.GetString("ui.menu_bar.view.tile_preview")))
                 {
                     var viewGfx = prefs.ViewTileGraphicPreview;
                     var viewSpecs = prefs.ViewTileSpecPreview;
                     var specsTooltip = prefs.ViewTileSpecsOnTooltip;
 
-                    if (ImGui.MenuItem("Graphics", null, ref viewGfx))
+                    if (ImGui.MenuItem(I18n.GetString("ui.menu_bar.view.tile_preview.graphics"), null, ref viewGfx))
                         prefs.ViewTileGraphicPreview = viewGfx;
                     
-                    if (ImGui.MenuItem("Geometry", null, ref viewSpecs))
+                    if (ImGui.MenuItem(I18n.GetString("ui.menu_bar.view.tile_preview.geometry"), null, ref viewSpecs))
                         prefs.ViewTileSpecPreview = viewSpecs;
                     
-                    if (ImGui.MenuItem("Tooltip Geometry", null, ref specsTooltip))
+                    if (ImGui.MenuItem(I18n.GetString("ui.menu_bar.view.tile_preview.tooltip_geometry"), null, ref specsTooltip))
                         prefs.ViewTileSpecsOnTooltip = specsTooltip;
                     
                     ImGui.EndMenu();
                 }
 
-                if (ImGui.MenuItem("Home", !homeTab))
+                if (ImGui.MenuItem(I18n.GetString("ui.menu_bar.view.home"), !homeTab))
                 {
                     homeTab = true;
                     switchToHomeTab = true;
@@ -384,18 +384,18 @@ static class EditorWindow
 
                 ImGui.Separator();
 
-                if (ImGui.BeginMenu("Open Folder"))
+                if (ImGui.BeginMenu(I18n.GetString("ui.menu_bar.view.open_folder")))
                 {
-                    if (ImGui.MenuItem("Data..."))
+                    if (ImGui.MenuItem(I18n.GetString("ui.menu_bar.view.open_folder.data")))
                         RainEd.Instance.ShowPathInSystemBrowser(RainEd.Instance.AssetDataPath, false);
                     
-                    if (ImGui.MenuItem("Render..."))
+                    if (ImGui.MenuItem(I18n.GetString("ui.menu_bar.view.open_folder.render")))
                         RainEd.Instance.ShowPathInSystemBrowser(Path.Combine(RainEd.Instance.AssetDataPath, "Levels"), false);
 
-                    if (ImGui.MenuItem("Config..."))
+                    if (ImGui.MenuItem(I18n.GetString("ui.menu_bar.view.open_folder.config")))
                         RainEd.Instance.ShowPathInSystemBrowser(Boot.ConfigPath, false);
 
-                    if (ImGui.MenuItem("Scripts..."))
+                    if (ImGui.MenuItem(I18n.GetString("ui.menu_bar.view.open_folder.scripts")))
                         RainEd.Instance.ShowPathInSystemBrowser(Boot.ScriptsPath, false);
                     
                     ImGui.EndMenu();
@@ -404,9 +404,9 @@ static class EditorWindow
                 ImGui.EndMenu();
             }
 
-            if (ImGui.BeginMenu("Tools"))
+            if (ImGui.BeginMenu(I18n.GetString("ui.menu_bar.tools")))
             {
-                if (ImGui.MenuItem("Reload Scripts"))
+                if (ImGui.MenuItem(I18n.GetString("ui.menu_bar.tools.reload_scripts")))
                 {
                     LuaScripting.LuaInterface.Unload();
 
@@ -420,7 +420,7 @@ static class EditorWindow
                     }
                 }
 
-                if (ImGui.MenuItem("Execute Script..."))
+                if (ImGui.MenuItem(I18n.GetString("ui.menu_bar.tools.execute_script")))
                 {
                     var startDir = Path.Combine(Boot.ScriptsPath);
                     fileBrowser = new FileBrowser(
@@ -437,7 +437,7 @@ static class EditorWindow
 
                 ImGui.Separator();
 
-                if (ImGui.MenuItem("Asset Manager"))
+                if (ImGui.MenuItem(I18n.GetString("ui.menu_bar.tools.asset_manager")))
                 {
                     AssetManagerWindow.OpenWindow();
                 }
@@ -447,19 +447,19 @@ static class EditorWindow
                 ImGui.EndMenu();
             }
 
-            if (ImGui.BeginMenu("Help"))
+            if (ImGui.BeginMenu(I18n.GetString("ui.menu_bar.help")))
                 {
-                    if (ImGui.MenuItem("Readme..."))
+                    if (ImGui.MenuItem(I18n.GetString("ui.menu_bar.help.readme")))
                     {
                         Platform.OpenURL(Path.Combine(Boot.AppDataPath, "README.txt"));
                     }
 
-                    if (ImGui.MenuItem("Manual..."))
+                    if (ImGui.MenuItem(I18n.GetString("ui.menu_bar.help.manual")))
                     {
                         OpenManual();
                     }
 
-                    if (ImGui.MenuItem("About..."))
+                    if (ImGui.MenuItem(I18n.GetString("ui.menu_bar.help.about")))
                     {
                         AboutWindow.IsWindowOpen = true;
                     }
@@ -470,7 +470,7 @@ static class EditorWindow
                 }
             
             if (EulaUpdate.CanEula) {
-                if (ImGui.MenuItem("EULA")) {
+                if (ImGui.MenuItem(I18n.GetString("ui.menu_bar.help.eula"))) {
                     EulaUpdate.showEulaUpdateWindow = true;
                 }
             }

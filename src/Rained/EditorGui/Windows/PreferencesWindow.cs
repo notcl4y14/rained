@@ -20,10 +20,11 @@ static class PreferencesWindow
         Shortcuts,
         Theme,
         Drizzle,
-        Scripts
+        Scripts,
+        Languages
     }
 
-    private readonly static string[] NavTabs = ["General", "Interface", "Shortcuts", "Theme", "Drizzle", "Scripts"];
+    private readonly static string[] NavTabs = ["General", "Interface", "Shortcuts", "Theme", "Drizzle", "Scripts", "Languages"];
     private readonly static string[] RendererNames = ["Direct3D 11", "Direct3D 12", "OpenGL", "Vulkan"];
     private static NavTabEnum selectedNavTab = NavTabEnum.General;
 
@@ -226,6 +227,10 @@ static class PreferencesWindow
 
                     case NavTabEnum.Scripts:
                         LuaScripting.Modules.GuiModule.PrefsHook();
+                        break;
+                    
+                    case NavTabEnum.Languages:
+                        ShowLanguagesTab();
                         break;
                 }
 
@@ -1359,5 +1364,29 @@ static class PreferencesWindow
         }
 
         ConfigCheckbox("Rock types in large trash");
+    }
+
+    private static void ShowLanguagesTab()
+    {
+        if (ImGui.Button("Reload locales"))
+        {
+            I18n.UpdateLocales();
+        }
+
+        Dictionary<string, LocaleData> locales = I18n.GetLocales();
+
+        ImGui.BeginListBox("Locales");
+        foreach (var (codename, data) in locales)
+        {
+            if (ImGui.Selectable(data.name, I18n.GetCurrentLocale() == codename))
+            {
+                if (I18n.GetCurrentLocale() != codename)
+                {
+                    bool success = I18n.LoadLocale(codename);
+                    if (!success) Log.Error($"Something went wrong when trying to load locale {codename}");
+                }
+            }
+        }
+        ImGui.EndListBox();
     }
 }
