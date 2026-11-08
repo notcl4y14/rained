@@ -1,5 +1,5 @@
-NAME     = "English (United States)"
-CODENAME = "en-US"
+Name     = "English (United States)"
+Codename = "en-US"
 
 return {
     ui = {

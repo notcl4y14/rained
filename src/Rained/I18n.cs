@@ -15,18 +15,10 @@ static class I18n {
     private static Dictionary<string, LocaleData> locales = new();
     private static Dictionary<string, string> strings = new();
     private static string? currentLocale;
-    private static Lua? luaState = null;
+    private static Lua luaState = new();
 
     static I18n()
     {
-        luaState = new();
-
-        if (luaState == null)
-        {
-            Log.Warning("Failed to load Lua state. Cannot load Lua locales");
-            return;
-        }
-
         UpdateLocales();
 
         bool success = LoadLocale("en-US");
@@ -109,8 +101,6 @@ static class I18n {
     /// </summary>
     static LocaleData? RetrieveLocaleDataFromFile(string filepath)
     {
-        if (luaState == null) return null;
-
         if (!File.Exists(filepath))
         {
             return null;
@@ -139,11 +129,11 @@ static class I18n {
         }
 
         // NAME
-        LuaType type = luaState.GetGlobal("NAME");
+        LuaType type = luaState.GetGlobal("Name");
 
         if (type != LuaType.String)
         {
-            Log.Error("I18n LUA: Expected \"NAME\" variable");
+            Log.Error("I18n LUA: Expected \"Name\" variable");
             return null;
         }
 
@@ -151,11 +141,11 @@ static class I18n {
         luaState.Pop(1);
 
         // CODENAME
-        type = luaState.GetGlobal("CODENAME");
+        type = luaState.GetGlobal("Codename");
 
         if (type != LuaType.String)
         {
-            Log.Error("I18n LUA: Expected \"CODENAME\" variable");
+            Log.Error("I18n LUA: Expected \"Codename\" variable");
             return null;
         }
 
@@ -164,10 +154,10 @@ static class I18n {
 
         // Clearing Globals
         luaState.PushNil();
-        luaState.SetGlobal("NAME");
+        luaState.SetGlobal("Name");
 
         luaState.PushNil();
-        luaState.SetGlobal("CODENAME");
+        luaState.SetGlobal("Codename");
 
         luaState.SetTop(0);
 
@@ -184,8 +174,6 @@ static class I18n {
     /// </summary>
     static bool ReadTableKey(int tableIndex, string keyPath)
     {
-        if (luaState == null) return false;
-
         luaState.PushNil();
         tableIndex -= 1;
 
@@ -235,8 +223,6 @@ static class I18n {
 
     public static bool LoadStringsFromLuaFile(string filepath)
     {
-        if (luaState == null) return false;
-
         if (!File.Exists(filepath))
         {
             return false;
@@ -278,10 +264,10 @@ static class I18n {
 
         // Clearing Globals
         luaState.PushNil();
-        luaState.SetGlobal("NAME");
+        luaState.SetGlobal("Name");
 
         luaState.PushNil();
-        luaState.SetGlobal("CODENAME");
+        luaState.SetGlobal("Codename");
 
         luaState.SetTop(0);
 
