@@ -144,6 +144,10 @@ static class I18n {
             return false;
         }
 
+        // Isolating the function
+        luaState.NewTable();
+        luaState.SetUpValue(-2, 1);
+
         int funcRef = luaState.Ref(LuaRegistry.Index);
         LuaType type = luaState.RawGetInteger(LuaRegistry.Index, funcRef);
 
@@ -162,8 +166,12 @@ static class I18n {
             return false;
         }
 
+        // Retrieving the stored function from the registry to access its environment
+        luaState.RawGetInteger(LuaRegistry.Index, funcRef);
+        luaState.GetUpValue(-1, 1);
+
         // NAME
-        type = luaState.GetGlobal("Name");
+        type = luaState.GetField(-1, "Name");
 
         if (type != LuaType.String)
         {
@@ -175,7 +183,7 @@ static class I18n {
         luaState.Pop(1);
 
         // CODENAME
-        type = luaState.GetGlobal("Codename");
+        type = luaState.GetField(-1, "Codename");
 
         if (type != LuaType.String)
         {
@@ -186,7 +194,7 @@ static class I18n {
         string localeCodename = luaState.ToString(-1);
         luaState.Pop(1);
         
-        type = luaState.GetGlobal("Data");
+        type = luaState.GetField(-1, "Data");
 
         if (type != LuaType.Function)
         {
@@ -263,6 +271,7 @@ static class I18n {
     {
         Log.Information($"Loading localization table from {data.codename}");
 
+        // f
         LuaType type = luaState.RawGetInteger(LuaRegistry.Index, data.funcref);
 
         if (type != LuaType.Function)
@@ -281,7 +290,12 @@ static class I18n {
             return false;
         }
 
-        type = luaState.GetGlobal("Data");
+        // Retrieving the stored function from the registry to access its environment
+        luaState.RawGetInteger(LuaRegistry.Index, data.funcref);
+        luaState.GetUpValue(-1, 1);
+
+        // Data
+        type = luaState.GetField(-1, "Data");
 
         if (type != LuaType.Function)
         {
@@ -289,6 +303,7 @@ static class I18n {
             return false;
         }
 
+        // local a = pcall(Data)
         status = luaState.PCall(0, 1, 0);
 
         if (status != LuaStatus.OK)
