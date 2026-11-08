@@ -1,4 +1,3 @@
-using System.Text.Json;
 using KeraLua;
 
 namespace Rained;
@@ -134,15 +133,19 @@ static class I18n {
 
         string fileContents = File.ReadAllText(filepath);
 
-        // local f = loadstring(fileContents)
-        LuaStatus status = luaState.LoadString(fileContents);
+        bool failure = luaState.DoString("function _load(chunk, name) return load(chunk, name, \"t\", {}) end return load");
 
-        if (status != LuaStatus.OK)
+        if (failure)
         {
-            string error = luaState.ToString(0);
+            string error = luaState.ToString(-1);
             Log.Error($"I18n LUA: {error}");
             return false;
         }
+
+        // local f = _load(fileContents, "CHUNK")
+        luaState.PushString(fileContents);
+        luaState.PushString("CHUNK");
+        luaState.Call(2, 1);
 
         // Isolating the function
         luaState.NewTable();
@@ -157,11 +160,11 @@ static class I18n {
         }
 
         // f()
-        status = luaState.PCall(0, 0, 0);
+        LuaStatus status = luaState.PCall(0, 0, 0);
 
         if (status != LuaStatus.OK)
         {
-            string error = luaState.ToString(0);
+            string error = luaState.ToString(-1);
             Log.Error($"I18n LUA: {error}");
             return false;
         }
