@@ -1370,7 +1370,7 @@ static class PreferencesWindow
     {
         if (ImGui.Button("Reload locales"))
         {
-            I18n.UpdateLocales();
+            I18n.LoadLocales();
         }
 
         Dictionary<string, LocaleData> locales = I18n.GetLocales();
@@ -1382,7 +1382,7 @@ static class PreferencesWindow
             {
                 if (I18n.GetCurrentLocale() != codename)
                 {
-                    bool success = I18n.LoadLocale(codename);
+                    bool success = I18n.ApplyLocale(codename);
                     if (!success) Log.Error($"Something went wrong when trying to load locale {codename}");
                 }
             }

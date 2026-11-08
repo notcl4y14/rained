@@ -6,11 +6,11 @@ namespace Rained;
 struct LocaleData {
     public string name;
     public string codename;
-    public string filepath;
+    public int funcref;
 }
 
 static class I18n {
-    private const string localesDir = "dist/locales";
+    private const string localesDir = "locales";
 
     private static Dictionary<string, LocaleData> locales = new();
     private static Dictionary<string, string> strings = new();
@@ -19,12 +19,16 @@ static class I18n {
 
     static I18n()
     {
-        UpdateLocales();
-
-        bool success = LoadLocale("en-US");
+        bool success = LoadLocales();
 
         if (!success) {
-            Log.Error("Failed to load the en-US locale upon initialization");
+            Log.Error($"Failed to load locales. Make sure that the \"locales\" directory exists at this path: {Boot.AssetsPath}");
+        }
+
+        success = ApplyLocale("en-US");
+
+        if (!success) {
+            Log.Error("Failed to apply the en-US locale upon initialization");
         }
     }
 
@@ -33,42 +37,62 @@ static class I18n {
         return locales;
     }
 
+    /// <summary>
+    /// Returns the codename of the current locale.
+    /// Returns null if no locale is loaded.
+    /// </summary>
     public static string? GetCurrentLocale()
     {
         return currentLocale;
     }
 
-    public static bool LoadLocale(string name)
+    /// <summary>
+    /// Applies a stored locale to the I18n's strings dictionary. The locale is determined by its codename.
+    /// Returns true on success, false on failure.
+    /// </summary>
+    public static bool ApplyLocale(string codename)
     {
-        bool success = locales.TryGetValue(name, out LocaleData localeData);
+        bool success = locales.TryGetValue(codename, out LocaleData localeData);
         if (!success) return false;
 
-        success = LoadStringsFromLuaFile(localeData.filepath);
+        success = LoadStringsFromLocaleData(localeData);
 
         if (success)
         {
-            currentLocale = name;
+            currentLocale = codename;
         }
 
         return success;
     }
 
+    /// <summary>
+    /// Retrieves a string from the I18n's strings dictionary and returns it.
+    /// Returns the requested key instead if the string does not exist.
+    /// </summary>
     public static string GetString(string key)
     {
         strings.TryGetValue(key, out string? outValue);
         return outValue ?? key;
     }
 
-    public static bool UpdateLocales()
+    /// <summary>
+    /// Retrieves every valid locale file, reads it and stores it into I18n's locales dictionary.
+    /// The function may be called again to update the locales, since it automatically clears out the dictionary first
+    /// (However, the dictionary is not cleared if it fails to find the locales directory).
+    /// Returns true on success, false on failure.
+    /// </summary>
+    public static bool LoadLocales()
     {
-        if (!Directory.Exists(localesDir))
+        string localesDirPath = Path.Combine(Boot.AssetsPath, localesDir);
+        
+        if (!Directory.Exists(localesDirPath))
         {
             return false;
         }
 
         locales.Clear();
 
-        foreach (string dirItem in Directory.GetFileSystemEntries(localesDir))
+        foreach (string dirItem in Assets.ConfigDirectory.EnumerateFiles(localesDirPath))
         {
             if (!File.Exists(dirItem))
             {
@@ -81,18 +105,13 @@ static class I18n {
                 continue;
             }
 
-            LocaleData? nullableLocaleData = RetrieveLocaleDataFromFile(dirItem);
+            bool success = LoadLocaleFromFile(dirItem, out LocaleData localeData);
 
-            if (nullableLocaleData == null)
+            if (!success)
             {
                 Log.Warning($"Could not retrieve data from {dirItem}");
                 continue;
             }
-
-            LocaleData localeData;
-            localeData.name = nullableLocaleData.Value.name;
-            localeData.codename = nullableLocaleData.Value.codename;
-            localeData.filepath = dirItem;
 
             locales[localeData.codename] = localeData;
         }
@@ -101,14 +120,16 @@ static class I18n {
     }
 
     /// <summary>
-    /// Reads the file and returns a LocaleData based on the data from the file's contents.
-    /// The returned LocaleData has an empty filepath, assign it manually.
+    /// Reads the file from filepath and modifies localeData's properties based on the data from the file's contents.
+    /// Returns true on success, false on failure.
     /// </summary>
-    static LocaleData? RetrieveLocaleDataFromFile(string filepath)
+    static bool LoadLocaleFromFile(string filepath, out LocaleData localeData)
     {
+        localeData = new LocaleData { };
+        
         if (!File.Exists(filepath))
         {
-            return null;
+            return false;
         }
 
         string fileContents = File.ReadAllText(filepath);
@@ -120,7 +141,15 @@ static class I18n {
         {
             string error = luaState.ToString(0);
             Log.Error($"I18n LUA: {error}");
-            return null;
+            return false;
+        }
+
+        int funcRef = luaState.Ref(LuaRegistry.Index);
+        LuaType type = luaState.RawGetInteger(LuaRegistry.Index, funcRef);
+
+        if (type != LuaType.Function) {
+            Log.Error($"I18n LUA: Expected function");
+            return false;
         }
 
         // f()
@@ -130,16 +159,16 @@ static class I18n {
         {
             string error = luaState.ToString(0);
             Log.Error($"I18n LUA: {error}");
-            return null;
+            return false;
         }
 
         // NAME
-        LuaType type = luaState.GetGlobal("Name");
+        type = luaState.GetGlobal("Name");
 
         if (type != LuaType.String)
         {
             Log.Error("I18n LUA: Expected \"Name\" variable");
-            return null;
+            return false;
         }
 
         string localeName = luaState.ToString(-1);
@@ -151,27 +180,19 @@ static class I18n {
         if (type != LuaType.String)
         {
             Log.Error("I18n LUA: Expected \"Codename\" variable");
-            return null;
+            return false;
         }
 
         string localeCodename = luaState.ToString(-1);
         luaState.Pop(1);
 
-        // Clearing Globals
-        luaState.PushNil();
-        luaState.SetGlobal("Name");
-
-        luaState.PushNil();
-        luaState.SetGlobal("Codename");
-
         luaState.SetTop(0);
 
-        LocaleData localeData;
         localeData.name = localeName;
         localeData.codename = localeCodename;
-        localeData.filepath = ""; // Resolved later by the CheckLocales()
-
-        return localeData;
+        localeData.funcref = funcRef;
+        
+        return true;
     }
 
     /// <summary>
@@ -226,29 +247,24 @@ static class I18n {
         return true;
     }
 
-    public static bool LoadStringsFromLuaFile(string filepath)
+    /// <summary>
+    /// Loads strings from the LocaleData data.
+    /// Returns true on success, false on failure.
+    /// </summary>
+    static bool LoadStringsFromLocaleData(LocaleData data)
     {
-        if (!File.Exists(filepath))
+        Log.Information($"Loading localization table from {data.codename}");
+
+        LuaType type = luaState.RawGetInteger(LuaRegistry.Index, data.funcref);
+
+        if (type != LuaType.Function)
         {
-            return false;
-        }
-
-        Log.Information($"Loading localization table from {filepath}");
-
-        string fileContents = File.ReadAllText(filepath);
-
-        // local f = loadstring(fileContents)
-        LuaStatus status = luaState.LoadString(fileContents);
-
-        if (status != LuaStatus.OK)
-        {
-            string error = luaState.ToString(0);
-            Log.Error($"I18n LUA: {error}");
+            Log.Error($"I18n: Expected function");
             return false;
         }
 
         // local t = pcall(f)
-        status = luaState.PCall(0, 1, 0);
+        LuaStatus status = luaState.PCall(0, 1, 0);
 
         if (status != LuaStatus.OK)
         {
@@ -266,13 +282,6 @@ static class I18n {
         strings.Clear();
 
         ReadTableKey(-1, "");
-
-        // Clearing Globals
-        luaState.PushNil();
-        luaState.SetGlobal("Name");
-
-        luaState.PushNil();
-        luaState.SetGlobal("Codename");
 
         luaState.SetTop(0);
 
