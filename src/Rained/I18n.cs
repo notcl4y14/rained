@@ -133,19 +133,13 @@ static class I18n {
 
         string fileContents = File.ReadAllText(filepath);
 
-        bool failure = luaState.DoString("function _load(chunk, name) return load(chunk, name, \"t\", {}) end return load");
-
-        if (failure)
-        {
-            string error = luaState.ToString(-1);
-            Log.Error($"I18n LUA: {error}");
-            return false;
-        }
-
-        // local f = _load(fileContents, "CHUNK")
+        // local f = load(fileContents, "CHUNK", "t", {})
+        luaState.GetGlobal("load");
         luaState.PushString(fileContents);
         luaState.PushString("CHUNK");
-        luaState.Call(2, 1);
+        luaState.PushString("t");
+        luaState.NewTable();
+        luaState.Call(4, 1);
 
         // Isolating the function
         luaState.NewTable();
