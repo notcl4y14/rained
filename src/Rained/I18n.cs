@@ -12,9 +12,23 @@ static class I18n {
     private const string localesDir = "locales";
 
     private static Dictionary<string, LocaleData> locales = new();
-    private static Dictionary<string, string> strings = new();
+    private static Dictionary<string, I18nKey> keys = new();
     private static string? currentLocale;
     private static Lua luaState = new();
+
+    private enum I18nKeyType
+    {
+        String,
+        FmtString,
+        Function
+    };
+    
+    private struct I18nKey
+    {
+        public I18nKeyType type;
+        public string stringValue;
+        public int fmtParamCount; // amount of string format parameters
+    }
 
     static I18n()
     {
@@ -26,8 +40,13 @@ static class I18n {
 
         success = ApplyLocale("en-US");
 
-        if (!success) {
+        if (!success)
+        {
             Log.Error("Failed to apply the en-US locale upon initialization");
+        }
+
+        foreach (var (name, value) in keys) {
+            Log.Information($"\"{name}\": \"{value.stringValue}\"");
         }
     }
 
@@ -46,7 +65,7 @@ static class I18n {
     }
 
     /// <summary>
-    /// Applies a stored locale to the I18n's strings dictionary. The locale is determined by its codename.
+    /// Applies a stored locale to the I18n's keys dictionary. The locale is determined by its codename.
     /// Returns true on success, false on failure.
     /// </summary>
     public static bool ApplyLocale(string codename)
@@ -54,7 +73,7 @@ static class I18n {
         bool success = locales.TryGetValue(codename, out LocaleData localeData);
         if (!success) return false;
 
-        success = LoadStringsFromLocaleData(localeData);
+        success = LoadKeysFromLocaleData(localeData);
 
         if (success)
         {
@@ -65,13 +84,45 @@ static class I18n {
     }
 
     /// <summary>
-    /// Retrieves a string from the I18n's strings dictionary and returns it.
-    /// Returns the requested key instead if the string does not exist.
+    /// Retrieves a string from the I18n's keys dictionary and returns it.
+    /// Returns the requested key name instead if the key does not exist.
     /// </summary>
-    public static string GetString(string key)
+    public static string GetString(string key, params object[] fmtArgs)
     {
-        strings.TryGetValue(key, out string? outValue);
-        return outValue ?? key;
+        bool success = keys.TryGetValue(key, out I18nKey outKey);
+
+        if (!success) {
+            return key;
+        }
+
+        switch (outKey.type)
+        {
+            case I18nKeyType.String:
+                return outKey.stringValue;
+
+            case I18nKeyType.FmtString:
+                string[] strFmtArgs = new string[outKey.fmtParamCount];
+
+                for (int i = 0; i < outKey.fmtParamCount; i += 1)
+                {
+                    if (i >= fmtArgs.Length)
+                    {
+                        strFmtArgs[i] = "(null)";
+                        continue;
+                    }
+
+                    string str = fmtArgs[i].ToString() ?? "(null)";
+                    strFmtArgs[i] = str;
+                }
+
+                return FormatString(outKey.stringValue, strFmtArgs);
+
+            case I18nKeyType.Function:
+                Log.Error("Function keys not implemented yet");
+                return key;
+        }
+
+        return key;
     }
 
     /// <summary>
@@ -83,7 +134,7 @@ static class I18n {
     public static bool LoadLocales()
     {
         string localesDirPath = Path.Combine(Boot.AssetsPath, localesDir);
-        
+
         if (!Directory.Exists(localesDirPath))
         {
             return false;
@@ -99,7 +150,8 @@ static class I18n {
                 continue;
             }
 
-            if (Path.GetExtension(dirItem) != ".lua") {
+            if (Path.GetExtension(dirItem) != ".lua")
+            {
                 // The item is not a LUA file, so we skip it
                 continue;
             }
@@ -116,6 +168,80 @@ static class I18n {
         }
 
         return true;
+    }
+
+    // <summary>
+    // Constructs a key from it string and determines its type.
+    // </summary>
+    static I18nKey ConstructKey(string str)
+    {
+        I18nKey key;
+        key.type = I18nKeyType.String;
+        key.stringValue = str;
+        key.fmtParamCount = 0;
+
+        int charIndex = 0;
+
+        while (charIndex < str.Length)
+        {
+            if (str[charIndex] == '%')
+            {
+                if (str[charIndex + 1] == '%')
+                {
+                    charIndex += 2;
+                }
+                else if (str[charIndex + 1] >= '1' || str[charIndex + 1] <= '9')
+                {
+                    key.fmtParamCount += 1;
+                    charIndex += 2;
+                }
+            }
+            else
+            {
+                charIndex += 1;
+            }
+        }
+
+        if (key.fmtParamCount > 0)
+        {
+            key.type = I18nKeyType.FmtString;
+        }
+
+        return key;
+    }
+
+    // <summary>
+    // Formats a string following the RainEd's I18n string formatting style.
+    // </summary>
+    static string FormatString(string str, params string[] fmtArgs)
+    {
+        string finalString = "";
+        int charIndex = 0;
+
+        while (charIndex < str.Length)
+        {
+            if (str[charIndex] == '%')
+            {
+                if (str[charIndex + 1] == '%')
+                {
+                    finalString += '%';
+                    charIndex += 2;
+                }
+                else if (str[charIndex + 1] >= '1' || str[charIndex + 1] <= '9')
+                {
+                    int fmtArgIndex = str[charIndex + 1] - '1';
+                    finalString += fmtArgs[fmtArgIndex];
+                    charIndex += 2;
+                }
+            }
+            else
+            {
+                finalString += str[charIndex];
+                charIndex += 1;
+            }
+        }
+
+        return finalString;
     }
 
     /// <summary>
@@ -209,7 +335,7 @@ static class I18n {
     }
 
     /// <summary>
-    /// Helper function. Reads locale key table and assigns its child keys to the I18n's strings.
+    /// Helper function. Reads locale key table and assigns its child keys to the I18n's keys.
     /// </summary>
     static bool ReadTableKey(int tableIndex, string keyPath)
     {
@@ -227,8 +353,12 @@ static class I18n {
 
                 if (luaState.ToInteger(keyIndex) == 1)
                 {
-                    strings[keyPath] = value;
+                    I18nKey key = ConstructKey(value);
+                    keys[keyPath] = key;
                 }
+
+                luaState.Pop(1);
+                continue;
             }
             else if (luaState.Type(keyIndex) != LuaType.String)
             {
@@ -243,10 +373,11 @@ static class I18n {
 
             if (luaState.Type(valueIndex) == LuaType.String)
             {
-                string key = luaState.ToString(keyIndex);
+                string keyName = luaState.ToString(keyIndex);
                 string value = luaState.ToString(valueIndex);
 
-                strings[$"{keySuffix}{key}"] = value;
+                I18nKey key = ConstructKey(value);
+                keys[$"{keySuffix}{keyName}"] = key;
             }
             else if (luaState.Type(valueIndex) == LuaType.Table)
             {
@@ -261,10 +392,10 @@ static class I18n {
     }
 
     /// <summary>
-    /// Loads strings from the LocaleData data.
+    /// Loads keys from the LocaleData data.
     /// Returns true on success, false on failure.
     /// </summary>
-    static bool LoadStringsFromLocaleData(LocaleData data)
+    static bool LoadKeysFromLocaleData(LocaleData data)
     {
         Log.Information($"Loading localization table from {data.codename}");
 
@@ -316,7 +447,7 @@ static class I18n {
             return false;
         }
 
-        strings.Clear();
+        keys.Clear();
 
         ReadTableKey(-1, "");
 
