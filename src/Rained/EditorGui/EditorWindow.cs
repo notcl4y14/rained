@@ -756,7 +756,7 @@ static class EditorWindow
                         switchToHomeTab = false;
                     }
                     
-                    if (ImGui.BeginTabItem("Home", ref homeTab, tabFlags))
+                    if (ImGui.BeginTabItem(I18n.GetString("ui.editor.tabs.home"), ref homeTab, tabFlags))
                     {
                         if (!tabChanged)
                         {
@@ -918,16 +918,16 @@ static class EditorWindow
         {
             if (promptUnsavedChangesCancelable)
             {
-                ImGui.Text("Do you want to save your changes before proceeding?");
+                ImGui.Text(I18n.GetString("ui.editor.prompts.unsaved_changes.cancelable"));
             }
             else
             {
-                ImGui.Text("You must save before proceeding.\nDo you want to save now?");
+                ImGui.Text(I18n.GetString("ui.editor.prompts.unsaved_changes.uncancelable"));
             }
 
             ImGui.Separator();
 
-            if (ImGui.Button("Yes", StandardPopupButtons.ButtonSize) || ImGui.IsKeyPressed(ImGuiKey.Enter) || ImGui.IsKeyPressed(ImGuiKey.Space))
+            if (ImGui.Button(I18n.GetString("ui.editor.buttons.yes"), StandardPopupButtons.ButtonSize) || ImGui.IsKeyPressed(ImGuiKey.Enter) || ImGui.IsKeyPressed(ImGuiKey.Space))
             {
                 ImGui.CloseCurrentPopup();
 
@@ -942,7 +942,7 @@ static class EditorWindow
             }
 
             ImGui.SameLine();
-            if (ImGui.Button("No", StandardPopupButtons.ButtonSize) || (!promptUnsavedChangesCancelable && ImGui.IsKeyPressed(ImGuiKey.Escape)))
+            if (ImGui.Button(I18n.GetString("ui.editor.buttons.no"), StandardPopupButtons.ButtonSize) || (!promptUnsavedChangesCancelable && ImGui.IsKeyPressed(ImGuiKey.Escape)))
             {
                 ImGui.CloseCurrentPopup();
 
@@ -963,7 +963,7 @@ static class EditorWindow
             if (promptUnsavedChangesCancelable)
             {
                 ImGui.SameLine();
-                if (ImGui.Button("Cancel", StandardPopupButtons.ButtonSize) || ImGui.IsKeyPressed(ImGuiKey.Escape))
+                if (ImGui.Button(I18n.GetString("ui.editor.buttons.cancel"), StandardPopupButtons.ButtonSize) || ImGui.IsKeyPressed(ImGuiKey.Escape))
                 {
                     ImGui.CloseCurrentPopup();
 
@@ -1059,17 +1059,17 @@ static class EditorWindow
         ImGui.SetCursorPosY(RainedLogo.Height - 100f);
         var btnSize = new Vector2(-0.00001f, 0f);
 
-        if (ImGui.Button("New Level...", btnSize))
+        if (ImGui.Button(I18n.GetString("ui.home.new_level"), btnSize))
             NewLevelWindow.OpenWindow();
         
-        if (ImGui.Button("Open Level...", btnSize))
+        if (ImGui.Button(I18n.GetString("ui.home.open_level"), btnSize))
             OpenLevelPrompt();
         
-        if (ImGui.Button("Manual...", btnSize))
+        if (ImGui.Button(I18n.GetString("ui.home.manual"), btnSize))
             OpenManual();
 
         // recent levels list
-        ImGui.Text("Recent Levels");
+        ImGui.Text(I18n.GetString("ui.home.recent_levels"));
         var listBoxSize = ImGui.GetContentRegionAvail();
         // if new version was found, make space for the text
         if (newVersion)
@@ -1084,7 +1084,7 @@ static class EditorWindow
         // show new version
         if (newVersion)
         {
-            ImGui.Text("New version available!");
+            ImGui.Text(I18n.GetString("ui.home.new_version_available"));
             ImGui.SameLine();
             ImGuiExt.LinkText(RainEd.Instance.LatestVersionInfo!.VersionName, RainEd.Instance.LatestVersionInfo.GitHubReleaseUrl);
         }
@@ -1098,7 +1098,7 @@ static class EditorWindow
 
         if (recentFiles.Count == 0)
         {
-            ImGui.MenuItem("(no recent files)", false);
+            ImGui.MenuItem(I18n.GetString("ui.home.no_recent_files"), false);
         }
         else
         {
@@ -1118,7 +1118,7 @@ static class EditorWindow
                     }
                     else
                     {
-                        ShowNotification("File could not be accessed");
+                        ShowNotification(I18n.GetString("ui.notifications.file_access_failure"));
                         recentFiles.RemoveAt(i);
                     }
                 }
@@ -1141,7 +1141,7 @@ static class EditorWindow
         }
         else
         {
-            ShowNotification("Could not open documentation.");
+            ShowNotification(I18n.GetString("ui.notifications.open_documentation_failure"));
         }
     }
 }

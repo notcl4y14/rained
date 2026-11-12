@@ -83,6 +83,35 @@ function Data()
                     eula = "EULA",
                 },
             },
+            editor = {
+                buttons = {
+                    yes = "Yes",
+                    no = "No",
+                    cancel = "Cancel",
+                },
+                prompts = {
+                    unsaved_changes = {
+                        "Unsaved Changes",
+                        cancelable = "Do you want to save your changes before proceeding?",
+                        uncancelable = "You must save before proceeding.\nDo you want to save now?",
+                    },
+                },
+                tabs = {
+                    home = "Home",
+                },
+            },
+            home = {
+                new_level = "New Level...",
+                open_level = "Open Level...",
+                manual = "Manual...",
+                recent_levels = "Recent Levels",
+                new_version_available = "New version available!",
+                no_recent_files = "(no recent files)",
+            },
+            notifications = {
+                file_access_failure = "File could not be accessed",
+                open_documentation_failure = "Could not open documentation.",
+            },
         },
     }
 end

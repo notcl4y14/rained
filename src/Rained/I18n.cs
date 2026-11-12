@@ -44,10 +44,6 @@ static class I18n {
         {
             Log.Error("Failed to apply the en-US locale upon initialization");
         }
-
-        foreach (var (name, value) in keys) {
-            Log.Information($"\"{name}\": \"{value.stringValue}\"");
-        }
     }
 
     public static Dictionary<string, LocaleData> GetLocales()
