@@ -19,7 +19,6 @@ static class I18n {
     private enum I18nKeyType
     {
         String,
-        FmtString,
         Function
     };
     
@@ -94,9 +93,11 @@ static class I18n {
         switch (outKey.type)
         {
             case I18nKeyType.String:
-                return outKey.stringValue;
-
-            case I18nKeyType.FmtString:
+                if (outKey.fmtParamCount == 0)
+                {
+                    return outKey.stringValue;
+                }
+                
                 string[] strFmtArgs = new string[outKey.fmtParamCount];
 
                 for (int i = 0; i < outKey.fmtParamCount; i += 1)
@@ -196,11 +197,6 @@ static class I18n {
             {
                 charIndex += 1;
             }
-        }
-
-        if (key.fmtParamCount > 0)
-        {
-            key.type = I18nKeyType.FmtString;
         }
 
         return key;
